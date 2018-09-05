@@ -1,15 +1,15 @@
 <?php
 
+namespace Aeg\DashboardNotice;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Class aeg_NM_Notice
- *
  * The actual notice that will be displayed in the dashboard.
  */
-class aeg_NM_Notice {
+class Notice {
 
 	const STATUS_INFO = 'info';
 	const STATUS_ERROR = 'error';
@@ -25,10 +25,10 @@ class aeg_NM_Notice {
 	 */
 	private $defaults = array(
 			'title'          => '',
-			'dismiss_anchor' => '',
+			'dismiss_text'   => '',
 			'dismiss_mode'   => self::DISMISS_NONE,
 			'show_close_btn' => false,
-			'cta_anchor'     => '',
+			'cta_text'       => '',
 			'cta_href'       => '',
 			'status'         => self::STATUS_INFO,
 			'custom_class'   => ''
@@ -45,7 +45,7 @@ class aeg_NM_Notice {
 	private $message;
 
 	/**
-	 * aeg_NM_Notice constructor.
+	 * Notice constructor.
 	 *
 	 * @param string $id             An unique identified for the notice message
 	 * @param string $message        The message of the notice.
@@ -103,15 +103,15 @@ class aeg_NM_Notice {
 	/**
 	 * @return string
 	 */
-	public function get_dismiss_anchor() {
-		return $this->args['dismiss_anchor'];
+	public function get_dismiss_text() {
+		return $this->args['dismiss_text'];
 	}
 
 	/**
 	 * @return string
 	 */
 	public function get_dismiss_url() {
-		return esc_url( wp_nonce_url( add_query_arg( aeg_NM_NoticesManager::DISMISS_QUERY_ARG, $this->get_id() ), aeg_NM_NoticesManager::DISMISS_QUERY_ARG . '-' . get_current_user_id() ) );
+		return esc_url( wp_nonce_url( add_query_arg( NoticesManager::DISMISS_QUERY_ARG, $this->get_id() ), NoticesManager::DISMISS_QUERY_ARG . '-' . get_current_user_id() ) );
 	}
 
 	/**
@@ -124,8 +124,8 @@ class aeg_NM_Notice {
 	/**
 	 * @return string
 	 */
-	public function get_cta_anchor() {
-		return $this->args['cta_anchor'];
+	public function get_cta_text() {
+		return $this->args['cta_text'];
 	}
 
 	/**
@@ -150,11 +150,64 @@ class aeg_NM_Notice {
 	}
 
 	/**
+	 * Dismisses the current notice, if it is dismissible, based on its params
+	 *
+	 * @return bool|int. True if the notice has been dismissed. False if it failed. 0 if the notice wasn't dismissible
+	 */
+	public function dismiss() {
+		if ( self::DISMISS_NONE === $this->get_dismiss_mode() ) {
+			return 0;
+		}
+
+		$dismissed_notices = NoticesManager::get_dismissed_options( $this->get_dismiss_mode() );
+		$new_option        = array_merge( $dismissed_notices, array( $this->get_id() ) );
+
+		if ( self::DISMISS_GLOBAL === $this->get_dismiss_mode() ) {
+			return $this->dismiss_global_notice( $new_option );
+		}
+
+		// The only other possible case is self::DISMISS_USER
+		return $this->dismiss_user_notice( $new_option );
+
+	}
+
+	/**
+	 * @param array $new_option
+	 *
+	 * @return bool
+	 */
+	private function dismiss_global_notice( $new_option ) {
+		return update_option( NoticesManager::DISMISSED_NOTICES_OPTION, $new_option, false );
+	}
+
+	/**
+	 * @param array $new_option
+	 *
+	 * @return bool
+	 */
+	private function dismiss_user_notice( $new_option ) {
+		return (bool) update_user_meta( get_current_user_id(), NoticesManager::DISMISSED_NOTICES_OPTION, $new_option );
+	}
+
+	/**
+	 * Checks if a the notice can be shown to the current user
+	 *
+	 * @return bool
+	 */
+	public function is_dismissed() {
+		$dismissed_notices = NoticesManager::get_dismissed_options( $this->get_dismiss_mode() );
+
+		$is_dismissed = ( in_array( $this->get_id(), $dismissed_notices ) );
+
+		return apply_filters( 'aeg_nm_is_notice_dismissed', $is_dismissed );
+	}
+
+	/**
 	 * @param string $dismiss_mode
 	 *
 	 * @return string
 	 */
-	public function validate_dismiss_mode( $dismiss_mode ) {
+	private function validate_dismiss_mode( $dismiss_mode ) {
 		return ( in_array( $dismiss_mode, self::available_dismiss_modes() ) ) ? $dismiss_mode : self::DISMISS_NONE;
 	}
 
@@ -163,7 +216,7 @@ class aeg_NM_Notice {
 	 *
 	 * @return string
 	 */
-	public function validate_status( $status ) {
+	private function validate_status( $status ) {
 		return ( in_array( $status, self::available_statuses() ) ) ? $status : self::STATUS_INFO;
 	}
 

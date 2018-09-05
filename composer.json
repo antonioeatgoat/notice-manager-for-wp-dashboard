@@ -9,12 +9,20 @@
         }
     ],
     "minimum-stability": "dev",
+    "scripts": {
+        "test": "phpunit",
+        "coverage": "phpunit --coverage-html tests/coverage"
+    },
+    "require-dev": {
+        "10up/wp_mock": "dev-dev",
+        "phpunit/phpunit": "^7.4"
+    },
     "require": {
         "php": ">5.2"
     },
     "autoload": {
-        "psr-0": {
-            "aeg_NM_": "src/"
+        "psr-4": {
+            "Aeg\\DashboardNotice\\": "src/classes/"
         }
     }
 }

@@ -13,17 +13,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function nmwp_autoload($class) {
 
-    if ( false === strpos( $class, 'aeg_NM_' ) ) {
+    if ( false === strpos( $class, 'Aeg\DashboardNotice\\' ) ) {
         return false;
     }
 
-    $directory_path = dirname(__FILE__) . '/src/';
-    $file_name      = str_replace('_', DIRECTORY_SEPARATOR, $class);
+    $directory_path = dirname(__FILE__) . '/src/classes/';
+    $file_name      = str_replace('Aeg\DashboardNotice\\', '', $class);
 
     $file = $directory_path . $file_name . '.php';
 
     if( file_exists( $file ) ) {
-	    include $directory_path . $file_name . '.php';
+	    include $file;
 	    return true;
     }
 

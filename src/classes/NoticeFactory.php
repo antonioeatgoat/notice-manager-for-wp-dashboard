@@ -1,13 +1,12 @@
 <?php
 
+namespace Aeg\DashboardNotice;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Class aeg_NM_NoticeFactory
- */
-class aeg_NM_NoticeFactory {
+class NoticeFactory {
 
 	/**
 	 * Creates a Notice object, see the documentation of the object to have more details on the parameters
@@ -16,10 +15,10 @@ class aeg_NM_NoticeFactory {
 	 * @param string $message
 	 * @param array  $args
 	 *
-	 * @return aeg_NM_Notice
+	 * @return Notice
 	 */
 	public function create( $id, $message, $args = array() ) {
-		return new aeg_NM_Notice( $id, $message, $args );
+		return new Notice( $id, $message, $args );
 	}
 
 }
